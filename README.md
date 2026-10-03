@@ -7,7 +7,7 @@ Predicting NBA MVP voting from player and team stats: scraped from scratch, clea
 | **2025** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **5 / 5** (in the exact order) |
 | **2026** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **4 / 5** |
 
-Across a 15-season backtest (2010–2024), the model picks the MVP in **8 of 15** seasons and finds **72%** of each season's top-5 vote-getters.
+The model reliably finds the top contenders, but it underrates players whose case rests on defense or advanced stats (see [Limitations](#limitations--future-work)).
 
 ![2025 results](images/results_2025.png)
 
@@ -33,19 +33,11 @@ The model predicts every player's vote share from that season's stats; the playe
 
 **Features.** 41 features: the raw stats plus **era-normalized** versions (each stat ÷ that season's league average), since 25 points per game means more in a low-scoring era. Columns that contain the answer (`Pts Won`, `Pts Max`, and the site's `Awards` column, which literally says `MVP-1`) are excluded.
 
-**Validation.** No random split: that would train on future seasons and break up each season's MVP race. Models were compared with a **season-by-season backtest** (train on all earlier seasons, predict the next) over 2010–2024, using average precision of the predicted top 5. 2025 and 2026 were held out completely.
+**Model.** A LightGBM regressor with small, regularized trees (parameters in `03_machine_learning.ipynb`).
 
-**Model selection.**
-
-| Model | Mean AP (top 5) | MVP correct (of 15) |
-|---|---|---|
-| Baseline: sort by points | 0.690 | 5 |
-| Baseline: points × team win % | 0.747 | 8 |
-| Ridge regression | 0.758 | 7 |
-| LightGBM, default parameters | 0.761 | 11 |
-| **LightGBM, tuned with Optuna + era-normalized features** | **0.817** | 8 |
-
-Tuning favored small, heavily regularized trees, which makes sense with only ~35 seasons and a handful of real candidates per season.
+**Validation.** Split by season, not randomly: a random split would train on future seasons and break up each season's MVP race.
+- Train on 1991–2024, test on **2025**.
+- Then retrain on 1991–2025, save the model, and test it on **2026**, a season it has never seen.
 
 ## Results
 
@@ -76,15 +68,14 @@ R² = 0.91, RMSE = 0.017. The loss curve shows train and test loss falling toget
 
 ![2026 results](images/results_2026.png)
 
-Across 10 random seeds the MVP pick and the 4/5 top-5 score never changed; Jokić/Dončić and Wembanyama/Cunningham are near-ties whose order can flip.
+Jokić/Dončić and Wembanyama/Cunningham get almost the same predicted share, so their exact order can flip with small changes (for example a different library version).
 
 ## What I learned / issues found
 
 - **Silent data loss.** The site changed how traded players are labeled (`TOT` → `2TM`/`3TM`). Following the original tutorial dropped **~1,900 player-seasons** without any error. Found by checking *which* rows had missing values, not just how many.
 - **Encoding bugs break joins.** MVP pages decoded as Latin-1 turned `Jokić` into `JokiÄ`, so Jokić's MVP seasons had no stats. Filling missing values with 0 would have taught the model that MVPs score 0 points.
 - **Leakage hides in plain sight.** The player table's `Awards` column contains `MVP-1`.
-- **One perfect test season is partly luck.** The 15-season backtest is the honest estimate; a single season is a sanity check.
-- **The metric changes the winner.** Tuning improved top-5 ranking (AP) but not #1-pick accuracy, so both are reported.
+- **One perfect test season is partly luck.** 2025 was an unusually clear race; 2026 (4 of 5) is a more typical result.
 
 ## Limitations & future work
 
@@ -130,4 +121,4 @@ Raw HTML pages (`mvp/`, `player/`, `team/`, `data_2026/`) are not committed; not
 
 All data comes from [Basketball Reference](https://www.basketball-reference.com) (Sports Reference LLC) and is used for educational purposes. Please respect their [bot traffic](https://www.sports-reference.com/bot-traffic.html) and [data use](https://www.sports-reference.com/data_use.html) policies if you re-scrape.
 
-Based on Dataquest's [Web Scraping NBA Stats With Python](https://www.youtube.com/watch?v=JGQGd-oa0l4) tutorial, extended with data-quality fixes, era-normalized features, LightGBM with Optuna tuning, backtesting, and out-of-sample tests on 2025 and 2026.
+Based on Dataquest's [Web Scraping NBA Stats With Python](https://www.youtube.com/watch?v=JGQGd-oa0l4) tutorial, extended with data-quality fixes, era-normalized features, a LightGBM model, and tests on the unseen 2025 and 2026 seasons.
