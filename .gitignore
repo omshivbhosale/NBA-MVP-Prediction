@@ -1,0 +1,16 @@
+# Raw scraped HTML (recreated by 01_web_scraping.ipynb)
+mvp/
+player/
+team/
+data_2026/
+
+# Python / Jupyter
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
