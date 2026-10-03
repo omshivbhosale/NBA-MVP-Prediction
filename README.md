@@ -79,8 +79,8 @@ Jokić/Dončić and Wembanyama/Cunningham get almost the same predicted share, s
 
 ## Limitations & future work
 
-- **No advanced or defensive stats.** The biggest misses (Jokić 2021–22, Wembanyama 2026) are players whose value shows up in Win Shares, BPM or defensive impact, not in box scores. Adding basketball-reference's advanced stats table is the clear next step.
-- **Narrative isn't in the data.** Derrick Rose (2011) and Russell Westbrook (2017) won on storylines the model can't see.
+- **No advanced or defensive stats.** The biggest miss (Victor Wembanyama in 2026) is a player whose value shows up in Win Shares, BPM or defensive impact, not in box scores. Adding basketball-reference's advanced stats table is the clear next step.
+- **Narrative isn't in the data.** Voters also weigh storylines (comebacks, team surprises) that stats can't capture.
 - **Eligibility rules.** Since 2024, players need 65 games to be MVP-eligible; the model learns this only indirectly.
 - **Deployment.** Serve the saved model through a small API / web app.
 
