@@ -5,7 +5,7 @@ Predicting NBA MVP voting from player and team stats: scraped from scratch, clea
 | Season (unseen) | Predicted MVP | Actual MVP | Real top 5 found |
 |---|---|---|---|
 | **2025** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **4 / 5** (top 4 in the exact order) |
-| **2026** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **4 / 5** |
+| **2026** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **4 / 5** (top 2 in the exact order) |
 
 The model reliably finds the top contenders, but it underrates players whose case rests on defense or advanced stats (see [Limitations](#limitations--future-work)).
 
@@ -59,20 +59,18 @@ R² = 0.93, RMSE = 0.014. The model misses one of the real top 5: it ranks Trae 
 
 ### 2026 (new season, saved model used without changes)
 
-> **Needs a refresh:** the table and chart below were produced before the hyperparameters were re-tuned on 1991–2024 only. The saved `mvp_model.joblib` has since been retrained, so re-run `04_test_2026_season.ipynb` (it re-downloads the 2026 pages) and update this section.
-
 | Player | Predicted share | Actual share | Predicted rank | Actual rank |
 |---|---|---|---|---|
-| Shai Gilgeous-Alexander | 0.757 | 0.939 | 1 | 1 |
-| Luka Dončić | 0.550 | 0.250 | 2 | 4 |
-| Nikola Jokić | 0.532 | 0.634 | 3 | 2 |
-| Jaylen Brown | 0.393 | 0.089 | 4 | 6 |
-| Victor Wembanyama | 0.215 | 0.569 | 5 | 3 |
-| Cade Cunningham | 0.215 | 0.117 | 6 | 5 |
+| Shai Gilgeous-Alexander | 0.738 | 0.939 | 1 | 1 |
+| Nikola Jokić | 0.577 | 0.634 | 2 | 2 |
+| Luka Dončić | 0.481 | 0.250 | 3 | 4 |
+| Jaylen Brown | 0.343 | 0.089 | 4 | 6 |
+| Cade Cunningham | 0.289 | 0.117 | 5 | 5 |
+| Victor Wembanyama | 0.189 | 0.569 | 6 | 3 |
 
 ![2026 results](images/results_2026.png)
 
-Jokić/Dončić and Wembanyama/Cunningham get almost the same predicted share, so their exact order can flip with small changes (for example a different library version).
+The model gets the MVP and the top two right. Its one miss is Wembanyama (predicted 0.19, actual 0.57, ranked 6th by the model but 3rd in the vote), and Jaylen Brown is the false alarm (predicted 4th, finished 6th).
 
 ## What I learned / issues found
 
