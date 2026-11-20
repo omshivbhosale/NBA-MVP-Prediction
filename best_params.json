@@ -1,0 +1,17 @@
+{
+  "params": {
+    "n_estimators": 494,
+    "learning_rate": 0.08918073675381503,
+    "num_leaves": 9,
+    "min_child_samples": 39,
+    "subsample": 0.8913676136251432,
+    "subsample_freq": 1,
+    "colsample_bytree": 0.5413649999612193
+  },
+  "cv_mse": 0.0012312345704844048,
+  "mvp_hit_rate": 0.6,
+  "validation_seasons": [
+    2015,
+    2024
+  ]
+}

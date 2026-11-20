@@ -4,7 +4,7 @@ Predicting NBA MVP voting from player and team stats: scraped from scratch, clea
 
 | Season (unseen) | Predicted MVP | Actual MVP | Real top 5 found |
 |---|---|---|---|
-| **2025** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **5 / 5** (in the exact order) |
+| **2025** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **4 / 5** (top 4 in the exact order) |
 | **2026** | Shai Gilgeous-Alexander | Shai Gilgeous-Alexander ✅ | **4 / 5** |
 
 The model reliably finds the top contenders, but it underrates players whose case rests on defense or advanced stats (see [Limitations](#limitations--future-work)).
@@ -24,6 +24,7 @@ The model predicts every player's vote share from that season's stats; the playe
 |---|---|
 | [`01_web_scraping.ipynb`](01_web_scraping.ipynb) | Downloads MVP voting, player per-game stats and team standings for 1991–2025 from basketball-reference.com (rate-limited, cached as raw HTML) |
 | [`02_data_cleaning.ipynb`](02_data_cleaning.ipynb) | Merges the three tables into one row per player-season (16,377 rows), fixes data issues, explores the data |
+| [`tune_hyperparameters.py`](tune_hyperparameters.py) | Picks LightGBM hyperparameters with rolling validation on 1991–2024 only; writes `best_params.json` |
 | [`03_machine_learning.ipynb`](03_machine_learning.ipynb) | Feature engineering, LightGBM training, evaluation on 2025, saves the final model |
 | [`04_test_2026_season.ipynb`](04_test_2026_season.ipynb) | Scrapes and cleans the 2026 season, loads the saved model, evaluates on 2026 |
 
@@ -33,7 +34,7 @@ The model predicts every player's vote share from that season's stats; the playe
 
 **Features.** 41 features: the raw stats plus **era-normalized** versions (each stat ÷ that season's league average), since 25 points per game means more in a low-scoring era. Columns that contain the answer (`Pts Won`, `Pts Max`, and the site's `Awards` column, which literally says `MVP-1`) are excluded.
 
-**Model.** A LightGBM regressor with small, regularized trees (parameters in `03_machine_learning.ipynb`).
+**Model.** A LightGBM regressor with small, regularized trees. Hyperparameters come from `tune_hyperparameters.py`: a random search of 40 settings, each scored by training on all earlier seasons and predicting one season, for every season from 2015 to 2024. The 2025 and 2026 seasons are never used for tuning (`best_params.json`).
 
 **Validation.** Split by season, not randomly: a random split would train on future seasons and break up each season's MVP race.
 - Train on 1991–2024, test on **2025**.
@@ -45,17 +46,20 @@ The model predicts every player's vote share from that season's stats; the playe
 
 | Player | Predicted share | Actual share | Predicted rank | Actual rank |
 |---|---|---|---|---|
-| Shai Gilgeous-Alexander | 0.761 | 0.913 | 1 | 1 |
-| Nikola Jokić | 0.615 | 0.787 | 2 | 2 |
-| Giannis Antetokounmpo | 0.360 | 0.470 | 3 | 3 |
-| Jayson Tatum | 0.173 | 0.311 | 4 | 4 |
-| Donovan Mitchell | 0.088 | 0.074 | 5 | 5 |
+| Shai Gilgeous-Alexander | 0.860 | 0.913 | 1 | 1 |
+| Nikola Jokić | 0.602 | 0.787 | 2 | 2 |
+| Giannis Antetokounmpo | 0.365 | 0.470 | 3 | 3 |
+| Jayson Tatum | 0.197 | 0.311 | 4 | 4 |
+| Trae Young | 0.109 | 0.000 | 5 | 26 |
+| Donovan Mitchell | 0.086 | 0.074 | 6 | 5 |
 
-R² = 0.91, RMSE = 0.017. The loss curve shows train and test loss falling together, with no overfitting:
+R² = 0.93, RMSE = 0.014. The model misses one of the real top 5: it ranks Trae Young 5th and Donovan Mitchell 6th. The loss curve shows train and test loss falling together, with no overfitting:
 
 <img src="images/loss_curve.png" width="550">
 
 ### 2026 (new season, saved model used without changes)
+
+> **Needs a refresh:** the table and chart below were produced before the hyperparameters were re-tuned on 1991–2024 only. The saved `mvp_model.joblib` has since been retrained, so re-run `04_test_2026_season.ipynb` (it re-downloads the 2026 pages) and update this section.
 
 | Player | Predicted share | Actual share | Predicted rank | Actual rank |
 |---|---|---|---|---|
@@ -75,7 +79,7 @@ Jokić/Dončić and Wembanyama/Cunningham get almost the same predicted share, s
 - **Silent data loss.** The site changed how traded players are labeled (`TOT` → `2TM`/`3TM`). Following the original tutorial dropped **~1,900 player-seasons** without any error. Found by checking *which* rows had missing values, not just how many.
 - **Encoding bugs break joins.** MVP pages decoded as Latin-1 turned `Jokić` into `JokiÄ`, so Jokić's MVP seasons had no stats. Filling missing values with 0 would have taught the model that MVPs score 0 points.
 - **Leakage hides in plain sight.** The player table's `Awards` column contains `MVP-1`.
-- **One perfect test season is partly luck.** 2025 was an unusually clear race; 2026 (4 of 5) is a more typical result.
+- **Tune on seasons you do not test on.** The first version used hard-coded hyperparameters with no tuning code, so they could have been chosen while looking at 2025. Re-tuning with rolling validation on 1991–2024 only moved the 2025 top-5 result from 5/5 to 4/5, which is the number to trust.
 
 ## Limitations & future work
 
@@ -90,7 +94,7 @@ Jokić/Dončić and Wembanyama/Cunningham get almost the same predicted share, s
 git clone https://github.com/omshivbhosale/nba-mvp-prediction.git
 cd nba-mvp-prediction
 pip install -r requirements.txt
-jupyter notebook
+jupyter nbconvert --to notebook --execute --inplace 03_machine_learning.ipynb   # or open the notebooks in Jupyter / VS Code
 ```
 
 Run the notebooks in order. The processed CSVs and the trained model (`mvp_model.joblib`) are included, so you can start directly at `03_machine_learning.ipynb`.
@@ -105,6 +109,8 @@ On macOS, LightGBM needs OpenMP: `brew install libomp`.
 ├── 02_data_cleaning.ipynb
 ├── 03_machine_learning.ipynb
 ├── 04_test_2026_season.ipynb
+├── tune_hyperparameters.py  # hyperparameter search on 1991–2024
+├── best_params.json         # its output, loaded by notebook 03
 ├── mvps.csv                 # MVP voting, 1991–2025
 ├── players.csv              # player per-game stats, 1991–2025
 ├── teams.csv                # team standings, 1991–2025
