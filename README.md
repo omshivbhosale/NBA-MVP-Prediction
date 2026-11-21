@@ -70,7 +70,7 @@ R² = 0.93, RMSE = 0.014. The model misses one of the real top 5: it ranks Trae 
 
 ![2026 results](images/results_2026.png)
 
-The model gets the MVP and the top two right. Its one miss is Wembanyama (predicted 0.19, actual 0.57, ranked 6th by the model but 3rd in the vote), and Jaylen Brown is the false alarm (predicted 4th, finished 6th).
+The model gets the MVP and the top two right. Its one miss is Wembanyama (predicted 0.19, actual 0.57, ranked 6th by the model but 3rd in the vote), and Jaylen Brown is the false alarm (predicted 4th, finished 6th). Across all players in the 2026 table: R² = 0.78, RMSE = 0.025.
 
 ## What I learned / issues found
 
